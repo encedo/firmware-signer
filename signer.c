@@ -336,6 +336,9 @@ int bin2ihex_buf(unsigned char *src, int src_len, unsigned int start_address, FI
   
   loop64k = src_len / (64*1024);
   rest64k = src_len % 64*1024;
+
+  sprintf(sbuf, ":00000010F0\r\n");
+  c = fwrite(sbuf, strlen(sbuf), 1, outFile);
   
   ptr = 0;
   while (loop64k--) {
