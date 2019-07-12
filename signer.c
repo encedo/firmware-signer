@@ -103,7 +103,10 @@ int main (int argc, char **argv) {
   
     if (ed25519_secret) {
         c = sha512(target_bin, target_len-sizeof(signature), hash_buf);   
-        ed25519_sign(signature, hash_buf, 64, public_key, private_key);
+        
+        //v2
+        ed25519_sign(signature, target_bin, target_len-sizeof(signature), public_key, private_key);
+        
         //add to target
         memmove(target_bin + (target_len - sizeof(signature) - sizeof(public_key)), public_key, sizeof(public_key));
         memmove(target_bin + (target_len - sizeof(signature) ), signature, sizeof(signature));
@@ -114,10 +117,24 @@ int main (int argc, char **argv) {
         
         public_key_verif = target_bin + (target_len - sizeof(signature) - sizeof(public_key));
         signatureverif = target_bin + (target_len - sizeof(signature));
+
+
+        printf("Signing PublicKey: ");    
+        for(c=0; c<32; c++) {
+            printf("%02x", (unsigned char)public_key_verif[c]);
+        }
+        printf("\r\n");
         
-        c = ED25519_DECLSPEC ed25519_verify(signatureverif, target_bin, target_len-sizeof(signature), public_key_verif);
-        if (c == 0) printf ("Signature: OK\r\n");
-        else printf ("Signature: FAILED\r\n");
+        printf("Target Signature: ");    
+        for(c=0; c<64; c++) {
+            printf("%02x", (unsigned char)signatureverif[c]);
+        }
+        printf("\r\n");                
+         
+        //v2
+        c = ed25519_verify(signatureverif, target_bin, target_len-sizeof(signature), public_key_verif);
+        if (c) printf ("Signature: OK\r\n");
+          else printf ("Signature: FAILED\r\n");
         return 0;
     }
     
