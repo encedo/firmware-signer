@@ -102,14 +102,14 @@ int main (int argc, char **argv) {
   if (target_bin && (target_len > 0)) {
   
     if (ed25519_secret) {
-        c = sha512(target_bin, target_len-sizeof(signature), hash_buf);   
-        
-        //v2
+        //v2        
+        memmove(target_bin + (target_len - sizeof(signature) - sizeof(public_key)), public_key, sizeof(public_key));
         ed25519_sign(signature, target_bin, target_len-sizeof(signature), public_key, private_key);
         
         //add to target
-        memmove(target_bin + (target_len - sizeof(signature) - sizeof(public_key)), public_key, sizeof(public_key));
         memmove(target_bin + (target_len - sizeof(signature) ), signature, sizeof(signature));
+
+        c = sha512(target_bin, target_len, hash_buf);   
     }        
     
     if (verify_infile) {
@@ -135,6 +135,7 @@ int main (int argc, char **argv) {
         c = ed25519_verify(signatureverif, target_bin, target_len-sizeof(signature), public_key_verif);
         if (c) printf ("Signature: OK\r\n");
           else printf ("Signature: FAILED\r\n");
+                   
         return 0;
     }
     
@@ -262,6 +263,9 @@ unsigned char *ihex2bin_buf(unsigned int *start_address, int *dst_len, FILE *inF
         if ((raw[0] == 0) && (raw[1] == 0) && (raw[2] == 0) && (raw[3] == 1)) {   //>End Of File record   :00000001FF
           *dst_len = total;                                                       //return total size of bin data && start address
           return dst;
+        } else
+        if ((raw[0] == 0) && (raw[1] == 0) && (raw[2] == 0) && (raw[3] == 0x10)) {  //Encedo Special Record - Flash Initialization 
+          //do nothing here
         } else
         if (raw[3] == 0) {                                                        //>Data record - process
           pos = elar + ( (unsigned int)raw[1]<<8 | (unsigned int)raw[2] );          //get start address of this chunk
